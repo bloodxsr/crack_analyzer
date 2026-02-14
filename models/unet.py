@@ -1,59 +1,81 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
+
 
 class DoubleConv(nn.Module):
     def __init__(self, in_c, out_c):
         super().__init__()
-        self.net = nn.Sequential(
-            nn.Conv2d(in_c, out_c, 3, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(out_c, out_c, 3, padding=1),
-            nn.ReLU()
+        self.conv = nn.Sequential(
+            nn.Conv2d(in_c, out_c, 3, padding=1, bias=False),
+            nn.BatchNorm2d(out_c),
+            nn.ReLU(inplace=True),
+
+            nn.Conv2d(out_c, out_c, 3, padding=1, bias=False),
+            nn.BatchNorm2d(out_c),
+            nn.ReLU(inplace=True),
         )
 
     def forward(self, x):
-        return self.net(x)
+        return self.conv(x)
+
 
 class UNet(nn.Module):
-    def __init__(self):
+    def __init__(self, in_channels=1, out_channels=1):
         super().__init__()
 
-        self.d1 = DoubleConv(1, 64)
-        self.p1 = nn.MaxPool2d(2)
+        # Encoder
+        self.enc1 = DoubleConv(in_channels, 64)
+        self.enc2 = DoubleConv(64, 128)
+        self.enc3 = DoubleConv(128, 256)
+        self.enc4 = DoubleConv(256, 512)
 
-        self.d2 = DoubleConv(64, 128)
-        self.p2 = nn.MaxPool2d(2)
+        self.pool = nn.MaxPool2d(2)
 
-        self.d3 = DoubleConv(128, 256)
-        self.p3 = nn.MaxPool2d(2)
+        # Bottleneck
+        self.bottleneck = nn.Sequential(
+            DoubleConv(512, 1024),
+            nn.Dropout2d(0.3)
+        )
 
-        self.b = DoubleConv(256, 512)
+        # Decoder
+        self.up4 = nn.ConvTranspose2d(1024, 512, 2, stride=2)
+        self.dec4 = DoubleConv(1024, 512)
 
-        self.u3 = nn.ConvTranspose2d(512, 256, 2, stride=2)
-        self.c3 = DoubleConv(512, 256)
+        self.up3 = nn.ConvTranspose2d(512, 256, 2, stride=2)
+        self.dec3 = DoubleConv(512, 256)
 
-        self.u2 = nn.ConvTranspose2d(256, 128, 2, stride=2)
-        self.c2 = DoubleConv(256, 128)
+        self.up2 = nn.ConvTranspose2d(256, 128, 2, stride=2)
+        self.dec2 = DoubleConv(256, 128)
 
-        self.u1 = nn.ConvTranspose2d(128, 64, 2, stride=2)
-        self.c1 = DoubleConv(128, 64)
+        self.up1 = nn.ConvTranspose2d(128, 64, 2, stride=2)
+        self.dec1 = DoubleConv(128, 64)
 
-        self.out = nn.Conv2d(64, 1, 1)
+        # Output
+        self.out = nn.Conv2d(64, out_channels, 1)
 
     def forward(self, x):
-        d1 = self.d1(x); p1 = self.p1(d1)
-        d2 = self.d2(p1); p2 = self.p2(d2)
-        d3 = self.d3(p2); p3 = self.p3(d3)
+        # Encoder
+        e1 = self.enc1(x)
+        e2 = self.enc2(self.pool(e1))
+        e3 = self.enc3(self.pool(e2))
+        e4 = self.enc4(self.pool(e3))
 
-        b = self.b(p3)
+        # Bottleneck
+        b = self.bottleneck(self.pool(e4))
 
-        u3 = self.u3(b)
-        c3 = self.c3(torch.cat([u3, d3], dim=1))
+        # Decoder
+        d4 = self.up4(b)
+        d4 = self.dec4(torch.cat([d4, e4], dim=1))
 
-        u2 = self.u2(c3)
-        c2 = self.c2(torch.cat([u2, d2], dim=1))
+        d3 = self.up3(d4)
+        d3 = self.dec3(torch.cat([d3, e3], dim=1))
 
-        u1 = self.u1(c2)
-        c1 = self.c1(torch.cat([u1, d1], dim=1))
+        d2 = self.up2(d3)
+        d2 = self.dec2(torch.cat([d2, e2], dim=1))
 
-        return torch.sigmoid(self.out(c1))
+        d1 = self.up1(d2)
+        d1 = self.dec1(torch.cat([d1, e1], dim=1))
+
+        return self.out(d1)  # LOGITS (no sigmoid)
+

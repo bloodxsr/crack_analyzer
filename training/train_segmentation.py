@@ -16,7 +16,7 @@ loader = DataLoader(dataset, batch_size=4, shuffle=True)
 
 model = UNet().to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
-loss_fn = nn.BCELoss()
+loss_fn = nn.BCEWithLogitsLoss()
 
 for epoch in range(30):
     model.train()
@@ -36,4 +36,4 @@ for epoch in range(30):
 
     print(f"Epoch {epoch+1}, Loss: {epoch_loss/len(loader)}")
 
-torch.save(model.state_dict(), "models/crack_unet.pth")
+torch.save(model.state_dict(), "models/unet.pth")
