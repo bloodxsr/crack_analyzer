@@ -20,17 +20,18 @@ Currently, the core **segmentation model is fully implemented and trained**.
 
 ## How It Works (High Level)
 
-Input Image
-↓
-Preprocessing (grayscale, resize, normalize)
-↓
-UNet Model
-↓
-Predicted Crack Mask
-↓
-(Optional) Feature Extraction
-↓
-(Optional) Severity Assessment
+- Input Image  
+  ↓  
+- Preprocessing (grayscale, resize, normalize)  
+  ↓  
+- UNet Model  
+  ↓  
+- Predicted Crack Mask  
+  ↓  
+- (Optional) Feature Extraction  
+  ↓  
+- (Optional) Severity Assessment
+
 
 ## Useful improvements already included
 
