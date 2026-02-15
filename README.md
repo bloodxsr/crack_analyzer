@@ -20,28 +20,6 @@ Currently, the core **segmentation model is fully implemented and trained**.
 
 ## How It Works (High Level)
 
-# Crack Analyzer
-
-A deep-learning–based crack analysis system that detects cracks in surface images using **UNet-based semantic segmentation**, with optional post-processing for feature extraction and severity assessment.
-
----
-
-## Project Overview
-
-This project focuses on **crack detection and analysis** in images of concrete, roads, walls, or similar surfaces.
-
-The system works in three conceptual stages:
-
-1. **Crack Segmentation (Deep Learning)**
-2. **Feature Extraction (Image Processing)**
-3. **Logic-Based Assessment (Rule Engine)**
-
-Currently, the core **segmentation model is fully implemented and trained**.
-
----
-
-## How It Works (High Level)
-
 Input Image
 ↓
 Preprocessing (grayscale, resize, normalize)
