@@ -8,8 +8,8 @@ from tqdm import tqdm
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 dataset = CrackDataset(
-    img_dir="E:\\CRACK_AI\\output\\images",
-    mask_dir="E:\\CRACK_AI\\output\\masks"
+    img_dir="E:\\crack_analyzer\\output\\images",
+    mask_dir="E:\\crack_analyzer\\output\\masks"
 )
 
 loader = DataLoader(dataset, batch_size=4, shuffle=True)
